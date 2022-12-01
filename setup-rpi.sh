@@ -14,8 +14,9 @@ setup_pihole() {
   # TODO configure upstream?  
 }
 
-setup_clamav() {
-  echo "+++ Setting up ClamAV..."
+setup_security_scan() {
+  echo "+++ Setting up Security Scan..."
+  echo "+++++ Setting up ClamAV..."
   apt-get install clamav
 
   mkdir /quarantine
@@ -25,11 +26,18 @@ setup_clamav() {
   chown root:root /var/log/clamav
   chmod 0744 /var/log/clamav
 
-  cp virus-scan.sh /root/
-  chown root:root /root/virus-scan.sh
-  chmod 0700 /root/virus-scan.sh
-  (crontab -l ; echo "0 4 * * * /bin/bash /root/virus-scan.sh") | crontab
+  echo "+++++ Setting up Fail2Ban..."
+  apt-get install fail2ban
+
+  echo "+++++ Setting up Security Check Script..."
+  cp security-scan.sh /root/
+  cp clamav-targets.txt /root/
+  chown root:root /root/security-scan.sh
+  chmod 0700 /root/security-scan.sh
+  (crontab -l ; echo "0 4 * * * /bin/bash /root/security-scan.sh") | crontab
 }
+
+
 
 USAGE="USAGE: ./setup-rpi.sh {openvpn | wireguard}"
 
@@ -51,5 +59,9 @@ else
     fi 
 
     setup_clamav
+
+    # Setup up some useful bits and pieces
+    echo "alias ll=\"ls -laF\"" >> /home/pi/.bashrc
+
     echo "=== SETUP COMPLETE ==="
 fi
